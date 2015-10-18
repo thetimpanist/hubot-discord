@@ -1,0 +1,21 @@
+{
+  "name": "hubot-discord",
+  "version": "1.0.0",
+  "description": "Hubot adapter for discord",
+  "main": "src/discord.coffee",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "discord.js": "3.8.0",
+    "parent-require": "^1.0.0"
+  },
+  "peerDependencies": {
+    "hubot": ">=2.0"
+  },
+  "devDependencies": {
+      "coffee-script": ">=1.2.0"
+  },
+  "author": "Chuck Newport",
+  "license": "ISC"
+}
