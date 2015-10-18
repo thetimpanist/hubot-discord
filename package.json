@@ -16,6 +16,10 @@
   "devDependencies": {
       "coffee-script": ">=1.2.0"
   },
+  "repository": {
+      "type": "git",
+      "url": "https://github.com/thetimpanist/hubot-discord"
+  },
   "author": "Chuck Newport",
   "license": "ISC"
 }
