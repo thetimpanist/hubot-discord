@@ -36,14 +36,27 @@ class DiscordBot extends Adapter
         user = @robot.brain.userForId message.author
         user.room = message.channel
 
-        @receive new TextMessage( user, message.content, message.id )
+        # revert the received mention to the raw text
+        text = message.content
+        for mention in message.mentions
+            rex = new RegExp( '<@' + mention.id + '>' )
+            if mention.id == @client.user.id
+                repl = '@' + @robot.name
+            else
+                repl = ''
+            text = text.replace '<@' + mention.id + '>', repl
+        
+        @robot.logger.debug text
+
+        @receive new TextMessage( user, text, message.id )
 
      send: (envelope, messages...) ->
         for msg in messages
             @client.sendMessage envelope.room, msg
 
      reply: (envelope, messages...) ->
-        @robot.logger.info "Reply"
+        for msg in messages
+            @client.reply envelope.room, msg
         
         
 exports.use = (robot) ->
