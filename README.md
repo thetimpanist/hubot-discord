@@ -14,7 +14,7 @@ You should report any issues or submit any pull requests to the
 You will need to create a Discord account for your hubot and then invite the bot
 to the channels you wish it to be present in
 
-    % export HUBOT_DISCORD_USERNAME="..."
+    % export HUBOT_DISCORD_EMAIL="..."
     % export HUBOT_DISCORD_PASSWORD="..."
 
 
