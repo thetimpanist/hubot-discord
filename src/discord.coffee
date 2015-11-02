@@ -55,8 +55,13 @@ class DiscordBot extends Adapter
             @client.sendMessage envelope.room, msg
 
      reply: (envelope, messages...) ->
+
+        # discord.js reply function looks for a 'sender' which doesn't 
+        # exist in our envelope object
+
+        user = envelope.user.name + ' '
         for msg in messages
-            @client.reply envelope.room, msg
+            @client.sendMessage envelope.room, msg, null, null, user 
         
         
 exports.use = (robot) ->
