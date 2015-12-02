@@ -61,7 +61,7 @@ class DiscordBot extends Adapter
 
         user = envelope.user.name
         for msg in messages
-            @client.sendMessage envelope.room, "#{user}, #{msg}" 
+            @client.sendMessage envelope.room, "#{user} #{msg}" 
         
         
 exports.use = (robot) ->
