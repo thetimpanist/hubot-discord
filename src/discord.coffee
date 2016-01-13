@@ -35,6 +35,7 @@ class DiscordBot extends Adapter
 
         user = @robot.brain.userForId message.author
         user.room = message.channel
+        user.raw_message = message
 
         # revert the received mention to the raw text
         text = message.content
