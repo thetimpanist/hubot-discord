@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "discord.js": "3.8.0",
+    "discord.js": "5.0.1",
     "parent-require": "^1.0.0"
   },
   "peerDependencies": {
