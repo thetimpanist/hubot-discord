@@ -37,6 +37,7 @@ class DiscordBot extends Adapter
         user.room = message.channel
 
         # revert the received mention to the raw text
+        @robot.logger.debug message
         text = message.content
         for mention in message.mentions
             rex = new RegExp( '<@' + mention.id + '>' )
@@ -46,8 +47,6 @@ class DiscordBot extends Adapter
                 repl = ''
             text = text.replace '<@' + mention.id + '>', repl
         
-        @robot.logger.debug text
-
         @receive new TextMessage( user, text, message.id )
 
      send: (envelope, messages...) ->
@@ -62,7 +61,12 @@ class DiscordBot extends Adapter
         user = envelope.user.name
         for msg in messages
             @client.sendMessage envelope.room, "#{user} #{msg}" 
-        
+
+     join: ( invite, callback ) ->
+        callback = callback || ()->
+        code = invite + ''
+        @client.joinServer( code, callback )
+       
         
 exports.use = (robot) ->
     new DiscordBot robot
