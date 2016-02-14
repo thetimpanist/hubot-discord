@@ -37,16 +37,7 @@ class DiscordBot extends Adapter
         user.room = message.channel
         user.raw_message = message
 
-        # revert the received mention to the raw text
-        text = message.content
-        for mention in message.mentions
-            rex = new RegExp( '<@' + mention.id + '>' )
-            if mention.id == @client.user.id
-                repl = '@' + @robot.name
-            else
-                repl = ''
-            text = text.replace '<@' + mention.id + '>', repl
-        
+        text = message.cleanContent
         @robot.logger.debug text
 
         @receive new TextMessage( user, text, message.id )
