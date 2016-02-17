@@ -4,6 +4,7 @@ catch
     prequire = require( 'parent-require' )
     {Robot, Adapter, EnterMessage, LeaveMessage, TopicMessage, TextMessage}  = prequire 'hubot'
 Discord = require "discord.js"
+{DiscordRawMessage, DiscordRawUser, DiscordRawServer, DiscordRawClient} = require './wrapper'
 
 
 class DiscordBot extends Adapter
@@ -28,41 +29,38 @@ class DiscordBot extends Adapter
         @robot.logger.info "Robot Name: " + @robot.name
         @emit "connected"
 
-     message: (message) =>
+     message: (raw_message) =>
+
+        message = new DiscordRawMessage raw_message
+        @robot.logger.debug raw_message
+        @robot.logger.debug "MESSAGE:"
+        @robot.logger.debug message
 
         # ignore messages from myself
-        return if message.author.id == @client.user.id
+        return if message.user.id == @client.user.id
 
-        user = @robot.brain.userForId message.author
+        user = @robot.brain.userForId message.user.id
+        user.name = message.user.username
         user.room = message.channel
         user.raw_message = message
 
         # revert the received mention to the raw text
         text = message.content
-        for mention in message.mentions
-            rex = new RegExp( '<@' + mention.id + '>' )
-            if mention.id == @client.user.id
-                repl = '@' + @robot.name
-            else
-                repl = ''
-            text = text.replace '<@' + mention.id + '>', repl
         
-        @robot.logger.debug text
-
         @receive new TextMessage( user, text, message.id )
 
      send: (envelope, messages...) ->
         for msg in messages
-            @client.sendMessage envelope.room, msg
+            @client.sendMessage envelope.room.id, msg
 
      reply: (envelope, messages...) ->
 
         # discord.js reply function looks for a 'sender' which doesn't 
         # exist in our envelope object
 
-        user = envelope.user.name
+        user = envelope.user.id
         for msg in messages
-            @client.sendMessage envelope.room, "#{user} #{msg}" 
+            @client.sendMessage envelope.room.id, "<@#{user}> #{msg}" 
         
         
 exports.use = (robot) ->
