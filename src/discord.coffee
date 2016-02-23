@@ -42,6 +42,9 @@ class DiscordBot extends Adapter
         text = message.cleanContent
         @robot.logger.debug text
 
+        if (message.channel instanceof Discord.PMChannel)
+          text = "#{@robot.name}: #{text}"
+
         @receive new TextMessage( user, text, message.id )
 
      send: (envelope, messages...) ->
