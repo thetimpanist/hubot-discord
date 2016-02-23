@@ -36,6 +36,7 @@ class DiscordBot extends Adapter
 
         user = @robot.brain.userForId message.author.id
         user.room = message.channel.name
+        user.name = message.author.name
         rooms[message.channel.name] ?= message.channel
 
         text = message.cleanContent
