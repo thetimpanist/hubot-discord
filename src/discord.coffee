@@ -32,8 +32,6 @@ class DiscordBot extends Adapter
      message: (raw_message) =>
 
         message = new DiscordRawMessage raw_message
-        @robot.logger.debug raw_message
-        @robot.logger.debug "MESSAGE:"
         @robot.logger.debug message
 
         # ignore messages from myself
@@ -44,9 +42,9 @@ class DiscordBot extends Adapter
         user.room = message.channel
         user.raw_message = message
 
-        # revert the received mention to the raw text
-        text = message.content
-        
+        text = message.cleanContent
+        @robot.logger.debug text
+
         @receive new TextMessage( user, text, message.id )
 
      send: (envelope, messages...) ->
