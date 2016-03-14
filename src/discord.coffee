@@ -42,7 +42,7 @@ class DiscordBot extends Adapter
         user.room = message.channel
         user.raw_message = message
 
-        text = message.cleanContent
+        text = message.content
         @robot.logger.debug text
 
         @receive new TextMessage( user, text, message.id )
