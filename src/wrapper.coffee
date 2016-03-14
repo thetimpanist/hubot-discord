@@ -26,7 +26,7 @@ class DiscordRawChannel
     constructor: ( channel )->
         @id = channel.id
         @name = channel.name
-        @server = DiscordRawServer channel.server
+        @server = new DiscordRawServer channel.server
 
 class DiscordRawServer
     # Represents a user from discord.js
