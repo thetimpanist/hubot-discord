@@ -5,6 +5,7 @@ catch
     {Robot, Adapter, EnterMessage, LeaveMessage, TopicMessage, TextMessage}  = prequire 'hubot'
 Discord = require "discord.js"
 
+rooms = {}
 
 class DiscordBot extends Adapter
     constructor: (robot)->
@@ -33,18 +34,22 @@ class DiscordBot extends Adapter
         # ignore messages from myself
         return if message.author.id == @client.user.id
 
-        user = @robot.brain.userForId message.author
-        user.room = message.channel
-        user.raw_message = message
+        user = @robot.brain.userForId message.author.id
+        user.room = message.channel.name
+        user.name = message.author.name
+        rooms[message.channel.name] ?= message.channel
 
         text = message.cleanContent
         @robot.logger.debug text
+
+        if (message.channel instanceof Discord.PMChannel)
+          text = "#{@robot.name}: #{text}"
 
         @receive new TextMessage( user, text, message.id )
 
      send: (envelope, messages...) ->
         for msg in messages
-            @client.sendMessage envelope.room, msg
+            @client.sendMessage rooms[envelope.room], msg
 
      reply: (envelope, messages...) ->
 
@@ -53,7 +58,7 @@ class DiscordBot extends Adapter
 
         user = envelope.user.name
         for msg in messages
-            @client.sendMessage envelope.room, "#{user} #{msg}" 
+            @client.sendMessage rooms[envelope.room], "#{user} #{msg}" 
         
         
 exports.use = (robot) ->
