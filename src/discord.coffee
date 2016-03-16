@@ -16,6 +16,7 @@ class DiscordBot extends Adapter
         @options =
             email: process.env.HUBOT_DISCORD_EMAIL,
             password: process.env.HUBOT_DISCORD_PASSWORD
+            playing_game: process.env.HUBOT_DISCORD_PLAYING_GAME
 
         @client = new Discord.Client
         @client.on 'ready', @.ready
@@ -27,6 +28,12 @@ class DiscordBot extends Adapter
         @robot.logger.info 'Logged in: ' + @client.user.username
         @robot.name = @client.user.username.toLowerCase()
         @robot.logger.info "Robot Name: " + @robot.name
+
+        # set the bot's 'Playing Game' option
+        if (@options.playing_game)
+            @client.setPlayingGame(@options.playing_game)
+            @robot.logger.info "Robot Game: " + @options.playing_game
+
         @emit "connected"
 
      message: (message) =>
