@@ -40,11 +40,11 @@ class DiscordBot extends Adapter
         rooms[message.channel.name] ?= message.channel
 
         text = message.cleanContent
-        @robot.logger.debug text
-
+        
         if (message.channel instanceof Discord.PMChannel)
-          text = "#{@robot.name}: #{text}"
+          text = "#{@robot.name}: #{text}" if not text.match new RegExp( "^@?#{@robot.name}" )
 
+        @robot.logger.debug text
         @receive new TextMessage( user, text, message.id )
 
      send: (envelope, messages...) ->
