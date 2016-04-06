@@ -15,13 +15,18 @@ class DiscordBot extends Adapter
      run: ->
         @options =
             email: process.env.HUBOT_DISCORD_EMAIL,
-            password: process.env.HUBOT_DISCORD_PASSWORD
+            password: process.env.HUBOT_DISCORD_PASSWORD,
+            token: process.env.HUBOT_DISCORD_TOKEN
+            
 
         @client = new Discord.Client
         @client.on 'ready', @.ready
         @client.on 'message', @.message
-
-        @client.login @options.email, @options.password
+        
+        if @options.token?
+          @client.loginWithToken @options.token, @options.email, @options.password
+        else
+          @client.login @options.email, @options.password
 
      ready: =>
         @robot.logger.info 'Logged in: ' + @client.user.username
