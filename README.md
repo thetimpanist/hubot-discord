@@ -16,7 +16,15 @@ to the channels you wish it to be present in
 
     % export HUBOT_DISCORD_EMAIL="..."
     % export HUBOT_DISCORD_PASSWORD="..."
+    % export HUBOT_DISCORD_TOKEN="..."
 
+Environment Variable | Description | Example
+--- | --- | ---
+`HUBOT_DISCORD_EMAIL` | email for your discord hubot | `hubot@example.org`
+`HUBOT_DISCORD_PASSWORD`  | password for your discord hubot | `password`
+`HUBOT_DISCORD_TOKEN` | bot token for your oauth hubot | `MMMMMMMM`
+
+The OAuth token can be created for an existing bot by [following this guide](https://github.com/DoNotSpamPls/repository/wiki/How-to-convert-your-bot-account-in-the-API).
 
 ## Launching your hubot
     
