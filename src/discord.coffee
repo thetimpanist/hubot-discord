@@ -40,9 +40,9 @@ class DiscordBot extends Adapter
         return if message.author.id == @client.user.id
 
         user = @robot.brain.userForId message.author.id
-        user.room = message.channel.name
+        user.room = message.channel.id
         user.name = message.author.name
-        rooms[message.channel.name] ?= message.channel
+        rooms[message.channel.id] ?= message.channel
 
         text = message.cleanContent
         
