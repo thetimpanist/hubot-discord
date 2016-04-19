@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 try
     {Robot, Adapter, EnterMessage, LeaveMessage, TopicMessage, TextMessage}  = require 'hubot'
 catch
