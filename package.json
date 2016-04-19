@@ -1,13 +1,13 @@
 {
   "name": "hubot-discord",
-  "version": "1.0.2-beta.0",
+  "version": "1.1.0",
   "description": "Hubot adapter for discord",
   "main": "src/discord.coffee",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "discord.js": "7.0.1",
+    "discord.js": "7.0.0",
     "parent-require": "^1.0.0"
   },
   "peerDependencies": {

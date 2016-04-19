@@ -19,14 +19,18 @@ class DiscordBot extends Adapter
             token: process.env.HUBOT_DISCORD_TOKEN
             
 
-        @client = new Discord.Client
+        @client = new Discord.Client {forceFetchUsers: true, autoReconnect: true}
         @client.on 'ready', @.ready
         @client.on 'message', @.message
         
         if @options.token?
-          @client.loginWithToken @options.token, @options.email, @options.password
+          @client.loginWithToken @options.token, @options.email, @options.password, (err) ->
+            @robot.logger.error err
         else
-          @client.login @options.email, @options.password
+          @client.login @options.email, @options.password, (err) ->
+            @robot.logger.error err
+            
+        @client.autoReconnect
 
      ready: =>
         @robot.logger.info 'Logged in: ' + @client.user.username
@@ -56,20 +60,39 @@ class DiscordBot extends Adapter
         for msg in messages
           room = rooms[envelope.room]
           user = envelope.user.id
-          if(msg.match(/help\scommands/))
-            @client.sendMessage @client.users.get("id", user), msg
-            @client.sendMessage room, "<@#{user}>, check your messages for help."
-          else
-            @client.sendMessage room, msg
+
+          if(envelope.message.match(/^.+help.*$/))
+            #split message based on message splitting in hubot-slack #107
+            if(user)
+              @client.sendMessage @client.users.get("id", user), msg, (err) ->
+                @robot.logger.error err
               
-            
+              if msg.length > maxLength
+                submessages = []
+                while msg.length > 0
+                  # Split message at last line break, if it exists
+                  chunk = msg.substring(0, maxLength)
+                  breakIndex = if chunk.lastIndexOf('\n') isnt -1 then chunk.lastIndexOf('\n') else maxLength
+                  submessages.push msg.substring(0, breakIndex)
+                  # Skip char if split on line break
+                  breakIndex++ if breakIndex isnt maxLength
+                  msg = msg.substring(breakIndex, msg.length)
+                @client.sendMessage(@client.users.get('id', user), m) for m in submessages
+              else
+                @client.sendMessage(@client.users.get('id', user), msg)
+              @client.sendMessage room, "<@#{user}>, check your messages for help.", (err) ->
+                @robot.logger.error err
+          else
+            @client.sendMessage room, msg, (err) ->
+                @robot.logger.error err
 
      reply: (envelope, messages...) ->
         # discord.js reply function looks for a 'sender' which doesn't 
         # exist in our envelope object
         user = envelope.user.name
         for msg in messages
-          @client.sendMessage rooms[envelope.room], "#{user} #{msg}" 
+          @client.sendMessage rooms[envelope.room], "#{user} #{msg}", (err) ->
+                @robot.logger.error err
         
         
 exports.use = (robot) ->
