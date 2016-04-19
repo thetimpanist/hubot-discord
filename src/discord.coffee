@@ -35,17 +35,17 @@ class DiscordBot extends Adapter
         @emit "connected"
 
      message: (message) =>
-
+        @robot.done = false
         # ignore messages from myself
         return if message.author.id == @client.user.id
 
         user = @robot.brain.userForId message.author.id
-        user.room = message.channel.name
+        user.room = message.channel.id
         user.name = message.author.name
-        rooms[message.channel.name] ?= message.channel
+        user.id = message.author.id
+        rooms[message.channel.id] ?= message.channel
 
-        text = message.cleanContent
-        
+        text = message.cleanContent 
         if (message.channel instanceof Discord.PMChannel)
           text = "#{@robot.name}: #{text}" if not text.match new RegExp( "^@?#{@robot.name}" )
 
@@ -54,16 +54,22 @@ class DiscordBot extends Adapter
 
      send: (envelope, messages...) ->
         for msg in messages
-            @client.sendMessage rooms[envelope.room], msg
+          room = rooms[envelope.room]
+          user = envelope.user.id
+          if(msg.match(/help\scommands/))
+            @client.sendMessage @client.users.get("id", user), msg
+            @client.sendMessage room, "<@#{user}>, check your messages for help."
+          else
+            @client.sendMessage room, msg
+              
+            
 
      reply: (envelope, messages...) ->
-
         # discord.js reply function looks for a 'sender' which doesn't 
         # exist in our envelope object
-
         user = envelope.user.name
         for msg in messages
-            @client.sendMessage rooms[envelope.room], "#{user} #{msg}" 
+          @client.sendMessage rooms[envelope.room], "#{user} #{msg}" 
         
         
 exports.use = (robot) ->
