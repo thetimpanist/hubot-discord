@@ -60,31 +60,20 @@ class DiscordBot extends Adapter
         for msg in messages
           room = rooms[envelope.room]
           user = envelope.user.id
-
-          if(envelope.message.match(/^.+help.*$/))
-            #split message based on message splitting in hubot-slack #107
-            if(user)
-              @client.sendMessage @client.users.get("id", user), msg, (err) ->
-                @robot.logger.error err
-              
-              if msg.length > maxLength
-                submessages = []
-                while msg.length > 0
-                  # Split message at last line break, if it exists
-                  chunk = msg.substring(0, maxLength)
-                  breakIndex = if chunk.lastIndexOf('\n') isnt -1 then chunk.lastIndexOf('\n') else maxLength
-                  submessages.push msg.substring(0, breakIndex)
-                  # Skip char if split on line break
-                  breakIndex++ if breakIndex isnt maxLength
-                  msg = msg.substring(breakIndex, msg.length)
-                @client.sendMessage(@client.users.get('id', user), m) for m in submessages
-              else
-                @client.sendMessage(@client.users.get('id', user), msg)
-              @client.sendMessage room, "<@#{user}>, check your messages for help.", (err) ->
-                @robot.logger.error err
+          if msg.length > maxLength
+            submessages = []
+            while msg.length > 0
+              # Split message at last line break, if it exists
+              chunk = msg.substring(0, maxLength)
+              breakIndex = if chunk.lastIndexOf('\n') isnt -1 then chunk.lastIndexOf('\n') else maxLength
+              submessages.push msg.substring(0, breakIndex)
+              # Skip char if split on line break
+              breakIndex++ if breakIndex isnt maxLength
+              msg = msg.substring(breakIndex, msg.length)
+              sendWithHelpLogic(room, user, m, envelope.message) for m in submessages
           else
-            @client.sendMessage room, msg, (err) ->
-                @robot.logger.error err
+            sendWithHelpLogic(room, user, msg, envelope.message)
+            
 
      reply: (envelope, messages...) ->
         # discord.js reply function looks for a 'sender' which doesn't 
@@ -93,7 +82,21 @@ class DiscordBot extends Adapter
         for msg in messages
           @client.sendMessage rooms[envelope.room], "#{user} #{msg}", (err) ->
                 @robot.logger.error err
-        
-        
+     
+     sendWithHelpLogic: (room, user, msg, msgRecieved) ->
+        if(msgRecieved.match(/^.+help.*$/))
+          #split message based on message splitting in hubot-slack #107
+          if(user)
+            @client.sendMessage @client.users.get("id", user), msg, (err) ->
+              @robot.logger.error err
+            @client.sendMessage room, "<@#{user}>, check your messages for help.", (err) ->
+              @robot.logger.error err
+          else
+            @robor.logger.error 'Could not send message, no user to send message to. Message: #{msg}'
+        else
+          @client.sendMessage room, msg, (err) ->
+              @robot.logger.error err
+
+
 exports.use = (robot) ->
     new DiscordBot robot
