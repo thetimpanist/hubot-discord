@@ -7,26 +7,29 @@ Discord = require "discord.js"
 
 rooms = {}
 
+maxLength = parseInt(process.env.HUBOT_MAX_MESSAGE_LENGTH || 2000)
+
 class DiscordBot extends Adapter
-    constructor: (robot)->
+     constructor: (robot)->
         super
         @robot = robot
-
+     
      run: ->
         @options =
             email: process.env.HUBOT_DISCORD_EMAIL,
             password: process.env.HUBOT_DISCORD_PASSWORD,
             token: process.env.HUBOT_DISCORD_TOKEN
-            
 
-        @client = new Discord.Client
+        @client = new Discord.Client {forceFetchUsers: true, autoReconnect: true}
         @client.on 'ready', @.ready
         @client.on 'message', @.message
         
         if @options.token?
-          @client.loginWithToken @options.token, @options.email, @options.password
+          @client.loginWithToken @options.token, @options.email, @options.password, (err) ->
+            @robot.logger.error err
         else
-          @client.login @options.email, @options.password
+          @client.login @options.email, @options.password, (err) ->
+            @robot.logger.error err
 
      ready: =>
         @robot.logger.info 'Logged in: ' + @client.user.username
@@ -35,36 +38,61 @@ class DiscordBot extends Adapter
         @emit "connected"
 
      message: (message) =>
-
+        @robot.done = false
         # ignore messages from myself
         return if message.author.id == @client.user.id
 
         user = @robot.brain.userForId message.author.id
         user.room = message.channel.id
         user.name = message.author.name
+        user.id = message.author.id
         rooms[message.channel.id] ?= message.channel
 
-        text = message.cleanContent
-        
+        text = message.cleanContent 
         if (message.channel instanceof Discord.PMChannel)
           text = "#{@robot.name}: #{text}" if not text.match new RegExp( "^@?#{@robot.name}" )
 
         @robot.logger.debug text
         @receive new TextMessage( user, text, message.id )
+     
+     chunkMessage: (msg) =>
+        subMessages = []
+        if(msg.length > maxLength)
+          while msg.length > 0
+            # Split message at last line break, if it exists
+            chunk = msg.substring(0, maxLength)
+            breakIndex = if chunk.lastIndexOf('\n') isnt -1 then chunk.lastIndexOf('\n') else maxLength
+            subMessages.push msg.substring(0, breakIndex)
+            # Skip char if split on line break
+            breakIndex++ if breakIndex isnt maxLength
+            msg = msg.substring(breakIndex, msg.length)
+        else subMessages.push(msg)
+        return subMessages
 
      send: (envelope, messages...) ->
         for msg in messages
-            @client.sendMessage rooms[envelope.room], msg
+          room = rooms[envelope.room]
+          try
+            user = envelope.user.id
+          catch err
+            @robot.logger.error err
+            user = room
 
+          if(envelope.message.match(/^.+help.*$/))
+            @client.sendMessage(@client.users.get("id", user), m, (err) -> @robot.logger.error err ) for m in this.chunkMessage msg
+            @client.sendMessage room, "<@#{user}>, check your messages for help.", (err) ->
+              @robot.logger.error err
+          else
+            @client.sendMessage(room, m, (err) -> @robot.logger.error err) for m in this.chunkMessage msg
+          
      reply: (envelope, messages...) ->
-
         # discord.js reply function looks for a 'sender' which doesn't 
         # exist in our envelope object
-
         user = envelope.user.name
         for msg in messages
-            @client.sendMessage rooms[envelope.room], "#{user} #{msg}" 
-        
-        
+          @client.sendMessage rooms[envelope.room], "#{user} #{msg}", (err) ->
+                @robot.logger.error err
+
+
 exports.use = (robot) ->
     new DiscordBot robot
