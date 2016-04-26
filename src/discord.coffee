@@ -7,6 +7,8 @@ Discord = require "discord.js"
 
 rooms = {}
 
+maxLength = parseInt(process.env.HUBOT_MAX_MESSAGE_LENGTH || 2000)
+
 class DiscordBot extends Adapter
     constructor: (robot)->
         super
