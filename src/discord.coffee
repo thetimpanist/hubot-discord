@@ -7,6 +7,8 @@ Discord = require "discord.js"
 
 rooms = {}
 
+maxLength = parseInt(process.env.HUBOT_MAX_MESSAGE_LENGTH || 2000)
+
 class DiscordBot extends Adapter
     constructor: (robot)->
         super
@@ -17,7 +19,6 @@ class DiscordBot extends Adapter
             email: process.env.HUBOT_DISCORD_EMAIL,
             password: process.env.HUBOT_DISCORD_PASSWORD,
             token: process.env.HUBOT_DISCORD_TOKEN
-            
 
         @client = new Discord.Client {forceFetchUsers: true, autoReconnect: true}
         @client.on 'ready', @.ready
@@ -29,8 +30,6 @@ class DiscordBot extends Adapter
         else
           @client.login @options.email, @options.password, (err) ->
             @robot.logger.error err
-            
-        @client.autoReconnect
 
      ready: =>
         @robot.logger.info 'Logged in: ' + @client.user.username
@@ -59,7 +58,12 @@ class DiscordBot extends Adapter
      send: (envelope, messages...) ->
         for msg in messages
           room = rooms[envelope.room]
-          user = envelope.user.id
+          try
+            user = envelope.user.id
+          catch err
+            @robot.logger.error err
+            user = room
+
           if msg.length > maxLength
             submessages = []
             while msg.length > 0
