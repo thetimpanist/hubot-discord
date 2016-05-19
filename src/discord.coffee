@@ -19,7 +19,7 @@ class DiscordBot extends Adapter
             token: process.env.HUBOT_DISCORD_TOKEN
             
 
-        @client = new Discord.Client
+        @client = new Discord.Client {autoReconnect: true}
         @client.on 'ready', @.ready
         @client.on 'message', @.message
         
