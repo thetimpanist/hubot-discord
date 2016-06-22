@@ -72,18 +72,7 @@ class DiscordBot extends Adapter
      send: (envelope, messages...) ->
         for msg in messages
           room = rooms[envelope.room]
-          try
-            user = envelope.user.id
-          catch err
-            @robot.logger.error err
-            user = room
-
-          if(envelope.message.match(/^.+help.*$/))
-            @client.sendMessage(@client.users.get("id", user), m, (err) -> @robot.logger.error err ) for m in this.chunkMessage msg
-            @client.sendMessage room, "<@#{user}>, check your messages for help.", (err) ->
-              @robot.logger.error err
-          else
-            @client.sendMessage(room, m, (err) -> @robot.logger.error err) for m in this.chunkMessage msg
+          @client.sendMessage(room, m, (err) -> @robot.logger.error err) for m in this.chunkMessage msg
           
      reply: (envelope, messages...) ->
         # discord.js reply function looks for a 'sender' which doesn't 
