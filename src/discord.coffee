@@ -36,6 +36,7 @@ class DiscordBot extends Adapter
         @robot.name = @client.user.username.toLowerCase()
         @robot.logger.info "Robot Name: " + @robot.name
         @emit "connected"
+        rooms[channel.id] = channel for channel in @client.channels
 
      message: (message) =>
         @robot.done = false
