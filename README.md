@@ -14,15 +14,11 @@ You should report any issues or submit any pull requests to the
 You will need to create a Discord account for your hubot and then invite the bot
 to the channels you wish it to be present in
 
-    % export HUBOT_DISCORD_EMAIL="..."
-    % export HUBOT_DISCORD_PASSWORD="..."
     % export HUBOT_DISCORD_TOKEN="..."
     % export HUBOT_MAX_MESSAGE_LENGTH="2000"
 
 Environment Variable | Description | Example
 --- | --- | ---
-`HUBOT_DISCORD_EMAIL` | email for your discord hubot | `hubot@example.org`
-`HUBOT_DISCORD_PASSWORD`  | password for your discord hubot | `password`
 `HUBOT_DISCORD_TOKEN` | bot token for your oauth hubot | `MMMMMMMM`
 `HUBOT_MAX_MESSAGE_LENGTH` | maximum message length to send at once | `2000`
 
