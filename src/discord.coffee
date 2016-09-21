@@ -19,6 +19,8 @@ class DiscordBot extends Adapter
             email: process.env.HUBOT_DISCORD_EMAIL,
             password: process.env.HUBOT_DISCORD_PASSWORD,
             token: process.env.HUBOT_DISCORD_TOKEN
+        # require oauth token type
+        @options.token = "Bot " + @options.token if not @options.token.startsWith "Bot "
 
         @client = new Discord.Client {forceFetchUsers: true, autoReconnect: true}
         @client.on 'ready', @.ready
