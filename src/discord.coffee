@@ -71,9 +71,16 @@ class DiscordBot extends Adapter
         return subMessages
 
      send: (envelope, messages...) ->
-        for msg in messages
-          room = rooms[envelope.room]
-          @client.sendMessage(room, m, (err) -> @robot.logger.error err) for m in this.chunkMessage msg
+        if messages.length > 0
+          message = messages.shift()
+          chunkedMessage = @chunkMessage message
+          if chunkedMessage.length > 0
+            chunk = chunkedMessage.shift()
+            room = rooms[envelope.room]
+            @client.sendMessage room, chunk, ((err) =>
+              remainingMessages = chunkedMessage.concat messages
+              if err then @robot.logger.error err
+              @send envelope, remainingMessages...)
           
      reply: (envelope, messages...) ->
         # discord.js reply function looks for a 'sender' which doesn't 
