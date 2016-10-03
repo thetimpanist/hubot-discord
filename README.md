@@ -20,9 +20,10 @@ to the channels you wish it to be present in
 Environment Variable | Description | Example
 --- | --- | ---
 `HUBOT_DISCORD_TOKEN` | bot token for your oauth hubot | `MMMMMMMM`
-`HUBOT_MAX_MESSAGE_LENGTH` | maximum message length to send at once | `2000`
+`HUBOT_DISCORD_STATUS_MSG` | Status message to set for "currently playing game" | `/help for help`
 
-The OAuth token can be created for an existing bot by [following this guide](https://github.com/DoNotSpamPls/repository/wiki/How-to-convert-your-bot-account-in-the-API).
+The OAuth token can be created for an existing bot by navigating to [here, the discord developer application dashboard](https://discordapp.com/developers/applications/me) and creating a new application.
+After creating the application, you will need to create a bot application and show then copy the bot token.
 
 ## Launching your hubot
     
