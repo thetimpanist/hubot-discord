@@ -11,12 +11,13 @@
 # Notes:
 # 
 try
-    {Robot, Adapter, EnterMessage, LeaveMessage, TopicMessage, TextMessage}  = require 'hubot'
+    {Robot, Adapter, EnterMessage, LeaveMessage, TopicMessage, TextMessage, User}  = require 'hubot'
 catch
     prequire = require( 'parent-require' )
-    {Robot, Adapter, EnterMessage, LeaveMessage, TopicMessage, TextMessage}  = prequire 'hubot'
+    {Robot, Adapter, EnterMessage, LeaveMessage, TopicMessage, TextMessage, User}  = prequire 'hubot'
 
 Discord             = require "discord.js"
+TextChannel         = Discord.TextChannel
 
 #Settings
 currentlyPlaying    = process.env.HUBOT_DISCORD_STATUS_MSG || ''
@@ -33,7 +34,7 @@ class DiscordBot extends Adapter
         @options =
             token: process.env.HUBOT_DISCORD_TOKEN
 
-        @client = new Discord.Client {forceFetchUsers: true, autoReconnect: true, api_request_method: 'sequential'}
+        @client = new Discord.Client {autoReconnect: true, fetch_all_members: true, api_request_method: 'burst', ws: {compress: yes, large_threshold: 1000}}
         @robot.client = @client
         @client.on 'ready', @.ready
         @client.on 'message', @.message
@@ -86,29 +87,60 @@ class DiscordBot extends Adapter
           
      sendMessage: (channelId, message) ->
         errorHandle = (err) ->
-          robot.logger.error "Error sending: #{message}"
-          robot.logger.error err
+          robot.logger.error "Error sending: #{message}\r\n#{err}"
+          
             
         #Padded blank space before messages to comply with https://github.com/meew0/discord-bot-best-practices
-        zSWC              = "\u200B"
+        zSWC              = "\u200B"  
         message = zSWC+message
         
         robot = @robot
         sendChannelMessage = (channel, message) ->
-          channel.sendMessage(message, {split: true})
-            .then (msg) ->
-              robot.logger.debug "SUCCESS! Message sent to: #{channel.id}"
-            .catch errorHandle
+          clientUser = robot?.client?.user
+          isText = channel != null && channel.type == 'text'
+          permissions = isText && channel.permissionsFor(clientUser)
+          
+          hasPerm = if isText then (permissions != null && permissions.hasPermission("SEND_MESSAGES")) else channel.type != 'text'
+          if(hasPerm)
+            channel.sendMessage(message, {split: true})
+              .then (msg) ->
+                robot.logger.debug "SUCCESS! Message sent to: #{channel.id}"
+              .catch (err) ->
+                robot.logger.debug "Error sending: #{message}\r\n#{err}"
+                if(process.env.HUBOT_OWNER)
+                  robot.client.fetchUser(process.env.HUBOT_OWNER)
+                    .then (owner) -> 
+                      owner.sendMessage("Couldn't send message to #{channel.name} (#{channel}) in #{channel.guild.name}, contact #{channel.guild.owner}.\r\n#{error}")
+                        .then (msg) ->
+                          robot.logger.debug "SUCCESS! Message sent to: #{owner.id}"
+                        .catch (err) ->
+                            robot.logger.debug "Error sending: #{message}\r\n#{err}"
+                    .catch (err) ->
+                        robot.logger.debug "Error sending: #{message}\r\n#{err}"
+          else
+            robot.logger.debug "Can't send message to #{channel.name}, permission denied"
+            if(process.env.HUBOT_OWNER)
+              robot.client.fetchUser(process.env.HUBOT_OWNER)
+                .then (owner) -> 
+                  owner.sendMessage("Couldn't send message to #{channel.name} (#{channel}) in #{channel.guild.name}, contact #{channel.guild.owner} to check permissions")
+                    .then (msg) ->
+                      robot.logger.debug "SUCCESS! Message sent to: #{owner.id}"
+                    .catch (err) ->
+                        robot.logger.debug "Error sending: #{message}\r\n#{err}"
+                .catch (err) ->
+                    robot.logger.debug "Error sending: #{message}\r\n#{err}"
+            
                     
         sendUserMessage = (user, message) ->
           user.then (u) ->
             u.sendMessage(message, {split: true})
               .then (msg) ->
                 robot.logger.debug "SUCCESS! Message sent to: #{user.id}"
-              .catch errorHandle
+              .catch (err) ->
+                robot.logger.debug "Error sending: #{message}\r\n#{err}"
               
 
-        @robot.logger.debug "#{@robot.name}: Try to send message: \"#{message}\" to channel: #{channelId}"
+        #@robot.logger.debug "#{@robot.name}: Try to send message: \"#{message}\" to channel: #{channelId}"
 
         if @rooms[channelId]? # room is already known and cached
             sendChannelMessage @rooms[channelId], message
@@ -119,7 +151,31 @@ class DiscordBot extends Adapter
             else if @client.fetchUser(channelId)?
                 sendUserMessage @client.fetchUser(channelId), message
             else
-              @robot.logger.error "Unknown channel id: #{channelId}"
+              @robot.logger.debug "Unknown channel id: #{channelId}"
           
+          
+     channelDelete: (channel, client) ->
+        roomId = channel.id
+        user               = new User client.user.id
+        user.room          = roomId
+        user.name          = client.user.username
+        user.discriminator = client.user.discriminator
+        user.id            = client.user.id
+        @robot.logger.info "#{user.name}#{user.discriminator} leaving #{roomId} after a channel delete"
+        @receive new LeaveMessage user, null, null
+        
+     guildDelete: (guild, client) ->
+      serverId = guild.id
+      roomIds = (channel.id for channel in guild.channels)
+      for room of rooms
+        user = new User client.user.id
+        user.room = room.id
+        user.name = client.user.username
+        user.discriminator = client.user.discriminator
+        user.id = client.user.id
+        @robot.logger.info "#{user.name}#{user.discriminator} leaving #{roomId} after a guild delete"
+        @receive new LeaveMessage(user, null, null)
+        
+        
 exports.use = (robot) ->
     new DiscordBot robot
