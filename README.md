@@ -21,6 +21,11 @@ Environment Variable | Description | Example
 --- | --- | ---
 `HUBOT_DISCORD_TOKEN` | bot token for your oauth hubot | `MMMMMMMM`
 `HUBOT_MAX_MESSAGE_LENGTH` | maximum message length to send at once | `2000`
+`HUBOT_DISCORD_HELP_REPLY_IN_PRIVATE` |  whether or not to reply to help messages in private, defaults to false | `false`
+`HUBOT_DISCORD_CARBON_TOKEN` | Carbonitex.net bot authentication | no example, it's a token
+`HUBOT_DISCORD_BOTS_WEB_USER` |  bots.discord.pw user id for bot | same as above
+`HUBOT_DISCORD_BOTS_WEB_TOKEN` |  bots.discord.pw auth token | same as above
+`HUBOT_DISCORD_STATUS_MSG` | Status message to set for "currently playing game" | `/help for help`
 
 The OAuth token can be created for an existing bot by [following this guide](https://github.com/DoNotSpamPls/repository/wiki/How-to-convert-your-bot-account-in-the-API).
 
