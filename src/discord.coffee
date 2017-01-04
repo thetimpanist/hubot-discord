@@ -108,36 +108,29 @@ class DiscordBot extends Adapter
               .catch (err) ->
                 robot.logger.debug "Error sending: #{message}\r\n#{err}"
                 if(process.env.HUBOT_OWNER)
-                  robot.client.users.get(process.env.HUBOT_OWNER)
-                    .then (owner) ->
-                      owner.sendMessage("Couldn't send message to #{channel.name} (#{channel}) in #{channel.guild.name}, contact #{channel.guild.owner}.\r\n#{error}")
-                        .then (msg) ->
-                          robot.logger.debug "SUCCESS! Message sent to: #{owner.id}"
-                        .catch (err) ->
-                            robot.logger.debug "Error sending: #{message}\r\n#{err}"
+                  owner = robot.client.users.get(process.env.HUBOT_OWNER)
+                  owner.sendMessage("Couldn't send message to #{channel.name} (#{channel}) in #{channel.guild.name}, contact #{channel.guild.owner}.\r\n#{error}")
+                    .then (msg) ->
+                      robot.logger.debug "SUCCESS! Message sent to: #{owner.id}"
                     .catch (err) ->
                         robot.logger.debug "Error sending: #{message}\r\n#{err}"
           else
             robot.logger.debug "Can't send message to #{channel.name}, permission denied"
             if(process.env.HUBOT_OWNER)
-              robot.client.users.get(process.env.HUBOT_OWNER)
-                .then (owner) ->
-                  owner.sendMessage("Couldn't send message to #{channel.name} (#{channel}) in #{channel.guild.name}, contact #{channel.guild.owner} to check permissions")
-                    .then (msg) ->
-                      robot.logger.debug "SUCCESS! Message sent to: #{owner.id}"
-                    .catch (err) ->
-                        robot.logger.debug "Error sending: #{message}\r\n#{err}"
+              owner = robot.client.users.get(process.env.HUBOT_OWNER)  
+              owner.sendMessage("Couldn't send message to #{channel.name} (#{channel}) in #{channel.guild.name}, contact #{channel.guild.owner} to check permissions")
+                .then (msg) ->
+                  robot.logger.debug "SUCCESS! Message sent to: #{owner.id}"
                 .catch (err) ->
                     robot.logger.debug "Error sending: #{message}\r\n#{err}"
 
 
         sendUserMessage = (user, message) ->
-          user.then (u) ->
-            u.sendMessage(message, {split: true})
-              .then (msg) ->
-                robot.logger.debug "SUCCESS! Message sent to: #{user.id}"
-              .catch (err) ->
-                robot.logger.debug "Error sending: #{message}\r\n#{err}"
+          user.sendMessage(message, {split: true})
+            .then (msg) ->
+              robot.logger.debug "SUCCESS! Message sent to: #{user.id}"
+            .catch (err) ->
+              robot.logger.debug "Error sending: #{message}\r\n#{err}"
 
 
         #@robot.logger.debug "#{@robot.name}: Try to send message: \"#{message}\" to channel: #{channelId}"
