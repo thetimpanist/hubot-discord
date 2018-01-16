@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "discord.js": "^9.3.0",
+    "discord.js": "^11.2.1",
     "request": "^2.67.0",
     "parent-require": "^1.0.0"
   },
@@ -31,6 +31,6 @@
   ],
   "engines": {
     "node": ">=6.0.0"
-  },  
+  },
   "license": "ISC"
 }
