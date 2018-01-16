@@ -85,6 +85,10 @@ class DiscordBot extends Adapter
         for message in messages
           @sendMessage envelope.room, "<@#{envelope.user.id}> #{message}"
 
+     emote: (envelope, messages...) ->
+        for message in messages
+          @sendMessage envelope.room, "_#{message}_"
+
      sendMessage: (channelId, message) ->
         errorHandle = (err) ->
           robot.logger.error "Error sending: #{message}\r\n#{err}"
