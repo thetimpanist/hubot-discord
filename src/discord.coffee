@@ -68,7 +68,7 @@ class DiscordBot extends Adapter
 
         text = message.cleanContent
 
-        if (message?.channel? instanceof Discord.DMChannel)
+        if (message?.channel instanceof Discord.DMChannel)
           text = "#{@robot.name}: #{text}" if not text.match new RegExp( "^@?#{@robot.name}" )
 
         @robot.logger.debug text
