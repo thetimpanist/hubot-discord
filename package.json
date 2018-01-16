@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "discord.js": "^11.2.1",
-    "request": "^2.67.0",
+    "request": "^2.79.0",
     "parent-require": "^1.0.0"
   },
   "peerDependencies": {
