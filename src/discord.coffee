@@ -51,7 +51,7 @@ class DiscordBot extends Adapter
 
         #post-connect actions
         @rooms[channel.id] = channel for channel in @client.channels
-        @client.user.setStatus('online', currentlyPlaying)
+        @client.user.setPresence({ status: 'online', game: { name: currentlyPlaying }})
           .then(@robot.logger.debug("Status set to #{currentlyPlaying}"))
           .catch(@robot.logger.error)
 
@@ -109,7 +109,7 @@ class DiscordBot extends Adapter
                 robot.logger.debug "Error sending: #{message}\r\n#{err}"
                 if(process.env.HUBOT_OWNER)
                   owner = robot.client.users.get(process.env.HUBOT_OWNER)
-                  owner.sendMessage("Couldn't send message to #{channel.name} (#{channel}) in #{channel.guild.name}, contact #{channel.guild.owner}.\r\n#{error}")
+                  owner.send("Couldn't send message to #{channel.name} (#{channel}) in #{channel.guild.name}, contact #{channel.guild.owner}.\r\n#{error}")
                     .then (msg) ->
                       robot.logger.debug "SUCCESS! Message sent to: #{owner.id}"
                     .catch (err) ->
@@ -118,7 +118,7 @@ class DiscordBot extends Adapter
             robot.logger.debug "Can't send message to #{channel.name}, permission denied"
             if(process.env.HUBOT_OWNER)
               owner = robot.client.users.get(process.env.HUBOT_OWNER)  
-              owner.sendMessage("Couldn't send message to #{channel.name} (#{channel}) in #{channel.guild.name}, contact #{channel.guild.owner} to check permissions")
+              owner.send("Couldn't send message to #{channel.name} (#{channel}) in #{channel.guild.name}, contact #{channel.guild.owner} to check permissions")
                 .then (msg) ->
                   robot.logger.debug "SUCCESS! Message sent to: #{owner.id}"
                 .catch (err) ->
@@ -126,7 +126,7 @@ class DiscordBot extends Adapter
 
 
         sendUserMessage = (user, message) ->
-          user.sendMessage(message, {split: true})
+          user.send(message, {split: true})
             .then (msg) ->
               robot.logger.debug "SUCCESS! Message sent to: #{user.id}"
             .catch (err) ->
@@ -154,7 +154,7 @@ class DiscordBot extends Adapter
         user.name          = client.user.username
         user.discriminator = client.user.discriminator
         user.id            = client.user.id
-        @robot.logger.info "#{user.name}#{user.discriminator} leaving #{roomId} after a channel delete"
+        @robot.logger.info "#{user.name}##{user.discriminator} leaving #{roomId} after a channel delete"
         @receive new LeaveMessage user, null, null
 
      guildDelete: (guild, client) ->
@@ -166,7 +166,7 @@ class DiscordBot extends Adapter
         user.name = client.user.username
         user.discriminator = client.user.discriminator
         user.id = client.user.id
-        @robot.logger.info "#{user.name}#{user.discriminator} leaving #{roomId} after a guild delete"
+        @robot.logger.info "#{user.name}##{user.discriminator} leaving #{roomId} after a guild delete"
         @receive new LeaveMessage(user, null, null)
 
 
