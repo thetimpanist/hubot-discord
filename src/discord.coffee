@@ -56,7 +56,10 @@ class DiscordBot extends Adapter
         @client.on 'ready', @.ready
         @client.on 'message', @.message
         @client.on 'disconnected', @.disconnected
-        @client.on 'messageReactionAdd', @.message_reaction
+        @client.on 'messageReactionAdd', (message, user)  => 
+          @.message_reaction('reaction_added', message, user)
+        @client.on 'messageReactionRemove', (message, user) => 
+          @.message_reaction('reaction_removed', message, user)
 
         @client.login(@options.token).catch(@robot.logger.error)
 
@@ -99,7 +102,7 @@ class DiscordBot extends Adapter
         @robot.logger.debug text
         @receive new TextMessage( user, text, message.id )
 
-     message_reaction: (message, user) => 
+     message_reaction: (reaction_type, message, user) => 
         # ignore reactions from myself
         return if user.id == @client.user.id
 
@@ -108,7 +111,7 @@ class DiscordBot extends Adapter
         text = @_format_incoming_message message.message
 
         text_message = new TextMessage(reactor, text, message.message.id)
-        @receive new ReactionMessage('reaction_added', reactor, message._emoji.name, 
+        @receive new ReactionMessage(reaction_type, reactor, message._emoji.name, 
           author, text_message, message.createdTimestamp)
 
      disconnected: =>
