@@ -80,6 +80,11 @@ class DiscordBot extends Adapter
 
         return text
 
+      _has_permission: (channel, user) =>
+        isText = channel != null && channel.type == 'text'
+        permissions = isText && channel.permissionsFor(user)
+        return if isText then (permissions != null && permissions.hasPermission("SEND_MESSAGES")) else channel.type != 'text'
+
      ready: =>
         @robot.logger.info "Logged in: #{@client.user.username}##{@client.user.discriminator}"
         @robot.name = @client.user.username
@@ -132,19 +137,15 @@ class DiscordBot extends Adapter
         errorHandle = (err) ->
           robot.logger.error "Error sending: #{message}\r\n#{err}"
 
-
         #Padded blank space before messages to comply with https://github.com/meew0/discord-bot-best-practices
         zSWC              = "\u200B"
         message = zSWC+message
 
         robot = @robot
+        _has_permission = @_has_permission
         sendChannelMessage = (channel, message) ->
-          clientUser = robot?.client?.user
-          isText = channel != null && channel.type == 'text'
-          permissions = isText && channel.permissionsFor(clientUser)
 
-          hasPerm = if isText then (permissions != null && permissions.hasPermission("SEND_MESSAGES")) else channel.type != 'text'
-          if(hasPerm)
+          if(_has_permission(channel, robot?.client?.user))
             channel.sendMessage(message, {split: true})
               .then (msg) ->
                 robot.logger.debug "SUCCESS! Message sent to: #{channel.id}"
