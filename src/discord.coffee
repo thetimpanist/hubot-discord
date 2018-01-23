@@ -11,10 +11,10 @@
 # Notes:
 #
 try
-    {Robot, Adapter, EnterMessage, LeaveMessage, TopicMessage, TextMessage, User}  = require 'hubot'
+    {Robot, Response, Adapter, EnterMessage, LeaveMessage, TopicMessage, TextMessage, User}  = require 'hubot'
 catch
     prequire = require( 'parent-require' )
-    {Robot, Adapter, EnterMessage, LeaveMessage, TopicMessage, TextMessage, User}  = prequire 'hubot'
+    {Robot, Response, Adapter, EnterMessage, LeaveMessage, TopicMessage, TextMessage, User}  = prequire 'hubot'
 
 Discord             = require "discord.js"
 TextChannel         = Discord.TextChannel
@@ -38,6 +38,11 @@ Robot::react = (matcher, options, callback) ->
     options = matcher
 
   @listen matchReaction, options, callback
+
+
+Response::react = () ->
+  strings = [].slice.call(arguments)
+  this.runWithMiddleware.apply(this, ['react', {plaintext: true}].concat(strings))
 
 class DiscordBot extends Adapter
      constructor: (robot)->
@@ -189,6 +194,14 @@ class DiscordBot extends Adapter
                 sendUserMessage @client.users.get(channelId), message
             else
               @robot.logger.debug "Unknown channel id: #{channelId}"
+
+
+     react: (envelope, reactions...) ->
+        robot = @robot
+        for reaction in reactions
+          robot.logger.info reaction
+          @rooms[envelope.room].fetchMessage(envelope.message.item.id)
+            .then((message) => message.react(reaction))
 
 
      channelDelete: (channel, client) ->
