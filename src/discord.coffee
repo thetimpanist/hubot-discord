@@ -198,9 +198,14 @@ class DiscordBot extends Adapter
 
      react: (envelope, reactions...) ->
         robot = @robot
+        channelId = envelope.room
+        messageId =  if envelope.message instanceof ReactionMessage \
+        then envelope.message.item.id
+        else envelope.message.id
+
         for reaction in reactions
           robot.logger.info reaction
-          @rooms[envelope.room].fetchMessage(envelope.message.item.id)
+          @rooms[channelId].fetchMessage(messageId)
             .then((message) => message.react(reaction))
 
 
