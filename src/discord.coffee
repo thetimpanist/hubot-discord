@@ -116,11 +116,11 @@ class DiscordBot extends Adapter
         text = @_format_incoming_message message.message
 
         text_message = new TextMessage(reactor, text, message.message.id)
-        reaction_string = message._emoji.name
+        reaction = message._emoji.name
         if message._emoji.id?
-          reaction_string += ":#{message._emoji.id}"
-        @receive new ReactionMessage(reaction_type, reactor, reaction_string,
-          author, text_message, message.createdTimestamp)
+          reaction += ":#{message._emoji.id}"
+        @receive new ReactionMessage(reaction_type, reactor, reaction, author, 
+          text_message, message.createdTimestamp)
 
      disconnected: =>
         @robot.logger.info "#{@robot.name} Disconnected, will auto reconnect soon..."
