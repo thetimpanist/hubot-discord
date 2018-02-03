@@ -90,6 +90,26 @@ class DiscordBot extends Adapter
         permissions = isText && channel.permissionsFor(user)
         return if isText then (permissions != null && permissions.hasPermission("SEND_MESSAGES")) else channel.type != 'text'
 
+      _send_success_callback: (adapter, channel, message) =>
+        adapter.robot.logger.debug "SUCCESS! Message sent to: #{channel.id}"
+
+      _send_fail_callback: (adapter, channel, message, error) =>
+        robot.logger.debug "ERROR! Message not sent: #{message}\r\n#{err}"
+        # check owner flag and prevent loops
+        if(process.env.HUBOT_OWNER and channel.id != process.env.HUBOT_OWNER)
+          sendMessage process.env.HUBOT_OWNER, "Couldn't send message to #{channel.name} (#{channel}) in #{channel.guild.name}, contact #{channel.guild.owner} to check permissions"
+
+      _get_channel: (channelId) =>
+        if @rooms[channelId]?
+          channel = @rooms[channelId]
+        else
+          channels = @client.channels.filter (channel) -> channel.id == channelId
+          if channels.first()?
+            channel = channels.first()
+          else
+            channel = @client.users.get(channelId)
+        return channel
+
      ready: =>
         @robot.logger.info "Logged in: #{@client.user.username}##{@client.user.discriminator}"
         @robot.name = @client.user.username
@@ -139,62 +159,23 @@ class DiscordBot extends Adapter
           @sendMessage envelope.room, "<@#{envelope.user.id}> #{message}"
 
      sendMessage: (channelId, message) ->
-        errorHandle = (err) ->
-          robot.logger.error "Error sending: #{message}\r\n#{err}"
 
         #Padded blank space before messages to comply with https://github.com/meew0/discord-bot-best-practices
         zSWC              = "\u200B"
         message = zSWC+message
 
-        robot = @robot
-        _has_permission = @_has_permission
-        sendChannelMessage = (channel, message) ->
+        channel = @._get_channel(channelId)
+        that = @
 
-          if(_has_permission(channel, robot?.client?.user))
-            channel.sendMessage(message, {split: true})
-              .then (msg) ->
-                robot.logger.debug "SUCCESS! Message sent to: #{channel.id}"
-              .catch (err) ->
-                robot.logger.debug "Error sending: #{message}\r\n#{err}"
-                if(process.env.HUBOT_OWNER)
-                  owner = robot.client.users.get(process.env.HUBOT_OWNER)
-                  owner.send("Couldn't send message to #{channel.name} (#{channel}) in #{channel.guild.name}, contact #{channel.guild.owner}.\r\n#{error}")
-                    .then (msg) ->
-                      robot.logger.debug "SUCCESS! Message sent to: #{owner.id}"
-                    .catch (err) ->
-                        robot.logger.debug "Error sending: #{message}\r\n#{err}"
-          else
-            robot.logger.debug "Can't send message to #{channel.name}, permission denied"
-            if(process.env.HUBOT_OWNER)
-              owner = robot.client.users.get(process.env.HUBOT_OWNER)  
-              owner.send("Couldn't send message to #{channel.name} (#{channel}) in #{channel.guild.name}, contact #{channel.guild.owner} to check permissions")
-                .then (msg) ->
-                  robot.logger.debug "SUCCESS! Message sent to: #{owner.id}"
-                .catch (err) ->
-                    robot.logger.debug "Error sending: #{message}\r\n#{err}"
-
-
-        sendUserMessage = (user, message) ->
-          user.send(message, {split: true})
+        # check permissions
+        if(channel and (!(channel instanceof TextChannel) or @_has_permission(channel, @robot?.client?.user)))
+          channel.send(message, {split: true})
             .then (msg) ->
-              robot.logger.debug "SUCCESS! Message sent to: #{user.id}"
-            .catch (err) ->
-              robot.logger.debug "Error sending: #{message}\r\n#{err}"
-
-
-        #@robot.logger.debug "#{@robot.name}: Try to send message: \"#{message}\" to channel: #{channelId}"
-
-        if @rooms[channelId]? # room is already known and cached
-            sendChannelMessage @rooms[channelId], message
-        else # unknown room, try to find it
-            channels = @client.channels.filter (channel) -> channel.id == channelId
-            if channels.first()?
-                sendChannelMessage channels.first(), message
-            else if @client.users.get(channelId)?
-                sendUserMessage @client.users.get(channelId), message
-            else
-              @robot.logger.debug "Unknown channel id: #{channelId}"
-
+              that._send_success_callback that, channel, message, msg
+            .catch (error) ->
+              that._send_fail_callback that, channel, message, error
+        else
+          @._send_fail_callback @, channel, message, "Invalid Channel"
 
      react: (envelope, reactions...) ->
         robot = @robot
