@@ -18,9 +18,26 @@ catch
 
 Discord             = require "discord.js"
 TextChannel         = Discord.TextChannel
+ReactionMessage     = require "./reaction_message"
 
 #Settings
 currentlyPlaying    = process.env.HUBOT_DISCORD_STATUS_MSG || ''
+
+Robot::react = (matcher, options, callback) ->
+  # this function taken from the hubot-slack api
+  matchReaction = (msg) -> msg instanceof ReactionMessage
+
+  if arguments.length == 1
+    return @listen matchReaction, matcher
+
+  else if matcher instanceof Function
+    matchReaction = (msg) -> msg instanceof ReactionMessage && matcher(msg)
+
+  else
+    callback = options
+    options = matcher
+
+  @listen matchReaction, options, callback
 
 class DiscordBot extends Adapter
      constructor: (robot)->
@@ -39,9 +56,34 @@ class DiscordBot extends Adapter
         @client.on 'ready', @.ready
         @client.on 'message', @.message
         @client.on 'disconnected', @.disconnected
+        @client.on 'messageReactionAdd', (message, user)  => 
+          @.message_reaction('reaction_added', message, user)
+        @client.on 'messageReactionRemove', (message, user) => 
+          @.message_reaction('reaction_removed', message, user)
 
         @client.login(@options.token).catch(@robot.logger.error)
 
+     _map_user: (discord_user, channel_id) -> 
+        user                      = @robot.brain.userForId discord_user.id
+        user.room                 = channel_id
+        user.name                 = discord_user.username
+        user.discriminator        = discord_user.discriminator
+        user.id                   = discord_user.id
+        
+        return user
+
+      _format_incoming_message: (message) -> 
+        @rooms[message.channel.id]?= message.channel
+        text = message.cleanContent ? message.content
+        if (message?.channel instanceof Discord.DMChannel)
+          text = "#{@robot.name}: #{text}" if not text.match new RegExp( "^@?#{@robot.name}" )
+
+        return text
+
+      _has_permission: (channel, user) =>
+        isText = channel != null && channel.type == 'text'
+        permissions = isText && channel.permissionsFor(user)
+        return if isText then (permissions != null && permissions.hasPermission("SEND_MESSAGES")) else channel.type != 'text'
 
      ready: =>
         @robot.logger.info "Logged in: #{@client.user.username}##{@client.user.discriminator}"
@@ -58,21 +100,27 @@ class DiscordBot extends Adapter
      message: (message) =>
         # ignore messages from myself
         return if message.author.id == @client.user.id
-        user                      = @robot.brain.userForId message.author.id
-        user.room                 = message.channel.id
-        user.name                 = message.author.username
-        user.discriminator        = message.author.discriminator
-        user.id                   = message.author.id
 
-        @rooms[message.channel.id]?= message.channel
-
-        text = message.cleanContent
-
-        if (message?.channel instanceof Discord.DMChannel)
-          text = "#{@robot.name}: #{text}" if not text.match new RegExp( "^@?#{@robot.name}" )
+        user = @_map_user message.author, message.channel.id
+        text = @_format_incoming_message(message)
 
         @robot.logger.debug text
         @receive new TextMessage( user, text, message.id )
+
+     message_reaction: (reaction_type, message, user) => 
+        # ignore reactions from myself
+        return if user.id == @client.user.id
+
+        reactor = @_map_user user, message.message.channel.id
+        author = @_map_user message.message.author, message.message.channel.id
+        text = @_format_incoming_message message.message
+
+        text_message = new TextMessage(reactor, text, message.message.id)
+        reaction = message._emoji.name
+        if message._emoji.id?
+          reaction += ":#{message._emoji.id}"
+        @receive new ReactionMessage(reaction_type, reactor, reaction, author, 
+          text_message, message.createdTimestamp)
 
      disconnected: =>
         @robot.logger.info "#{@robot.name} Disconnected, will auto reconnect soon..."
@@ -89,19 +137,15 @@ class DiscordBot extends Adapter
         errorHandle = (err) ->
           robot.logger.error "Error sending: #{message}\r\n#{err}"
 
-
         #Padded blank space before messages to comply with https://github.com/meew0/discord-bot-best-practices
         zSWC              = "\u200B"
         message = zSWC+message
 
         robot = @robot
+        _has_permission = @_has_permission
         sendChannelMessage = (channel, message) ->
-          clientUser = robot?.client?.user
-          isText = channel != null && channel.type == 'text'
-          permissions = isText && channel.permissionsFor(clientUser)
 
-          hasPerm = if isText then (permissions != null && permissions.hasPermission("SEND_MESSAGES")) else channel.type != 'text'
-          if(hasPerm)
+          if(_has_permission(channel, robot?.client?.user))
             channel.sendMessage(message, {split: true})
               .then (msg) ->
                 robot.logger.debug "SUCCESS! Message sent to: #{channel.id}"
