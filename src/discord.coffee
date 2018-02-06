@@ -186,17 +186,20 @@ class DiscordBot extends Adapter
           then envelope.message.item.id
           else envelope.message.id
 
-        for reaction in reactions
-          @robot.logger.info reaction
-          channel.fetchMessage(messageId)
-            .then (message) -> 
-              message.react(reaction)
-                .then (msg) ->
-                  that._send_success_callback that, channel, message, msg
-                .catch (error) ->
-                  that._send_fail_callback that, channel, message, error
-            .catch (error) ->
-              that._send_fail_callback that, channel, messageId, error
+        if(channel and (!(channel instanceof TextChannel) or @_has_permission(channel, @robot?.client?.user)))
+          for reaction in reactions
+            @robot.logger.info reaction
+            channel.fetchMessage(messageId)
+              .then (message) -> 
+                message.react(reaction)
+                  .then (msg) ->
+                    that._send_success_callback that, channel, message, msg
+                  .catch (error) ->
+                    that._send_fail_callback that, channel, message, error
+              .catch (error) ->
+                that._send_fail_callback that, channel, reaction, error
+        else
+          @._send_fail_callback @, channel, message, "Invalid Channel"
 
 
      channelDelete: (channel, client) ->
