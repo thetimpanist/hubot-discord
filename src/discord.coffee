@@ -94,7 +94,7 @@ class DiscordBot extends Adapter
         adapter.robot.logger.debug "SUCCESS! Message sent to: #{channel.id}"
 
       _send_fail_callback: (adapter, channel, message, error) =>
-        robot.logger.debug "ERROR! Message not sent: #{message}\r\n#{err}"
+        adapter.robot.logger.debug "ERROR! Message not sent: #{message}\r\n#{err}"
         # check owner flag and prevent loops
         if(process.env.HUBOT_OWNER and channel.id != process.env.HUBOT_OWNER)
           sendMessage process.env.HUBOT_OWNER, "Couldn't send message to #{channel.name} (#{channel}) in #{channel.guild.name}, contact #{channel.guild.owner} to check permissions"
@@ -179,15 +179,24 @@ class DiscordBot extends Adapter
 
      react: (envelope, reactions...) ->
         robot = @robot
-        channelId = envelope.room
+        channel = @._get_channel(envelope.room)
+        that = @
+
         messageId =  if envelope.message instanceof ReactionMessage \
-        then envelope.message.item.id
-        else envelope.message.id
+          then envelope.message.item.id
+          else envelope.message.id
 
         for reaction in reactions
-          robot.logger.info reaction
-          @rooms[channelId].fetchMessage(messageId)
-            .then((message) => message.react(reaction))
+          @robot.logger.info reaction
+          channel.fetchMessage(messageId)
+            .then (message) -> 
+              message.react(reaction)
+                .then (msg) ->
+                  that._send_success_callback that, channel, message, msg
+                .catch (error) ->
+                  that._send_fail_callback that, channel, message, error
+            .catch (error) ->
+              that._send_fail_callback that, channel, messageId, error
 
 
      channelDelete: (channel, client) ->
