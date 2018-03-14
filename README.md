@@ -11,8 +11,9 @@ You should report any issues or submit any pull requests to the
     yo hubot
 
 ## Configuring variables on *nix
-You will need to create a Discord account for your hubot and then invite the bot
-to the channels you wish it to be present in
+You will need to create a Discord bot account for your hubot and then invite the bot
+to the channels you wish it to be present in.
+This bot account is created following the instructions below the table.
 
     % export HUBOT_DISCORD_TOKEN="..."
     % export HUBOT_MAX_MESSAGE_LENGTH="2000"
