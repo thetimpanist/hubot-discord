@@ -56,6 +56,7 @@ class DiscordBot extends Adapter
         @client.on 'ready', @.ready
         @client.on 'message', @.message
         @client.on 'guildMemberAdd', @.enter
+        @client.on 'guildMemberRemove', @.leave
         @client.on 'disconnected', @.disconnected
         @client.on 'messageReactionAdd', (message, user)  => 
           @.message_reaction('reaction_added', message, user)
@@ -102,6 +103,11 @@ class DiscordBot extends Adapter
         user                      = member
         @robot.logger.debug "#{user} Joined"
         @receive new EnterMessage( user )
+
+     leave: (member) =>
+        user                      = member
+        @robot.logger.debug "#{user} Left"
+        @receive new LeaveMessage( user )
 
      message: (message) =>
         # ignore messages from myself
