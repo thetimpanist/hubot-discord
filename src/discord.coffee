@@ -55,6 +55,7 @@ class DiscordBot extends Adapter
         @robot.client = @client
         @client.on 'ready', @.ready
         @client.on 'message', @.message
+        @client.on 'guildMemberAdd', @.enter
         @client.on 'disconnected', @.disconnected
         @client.on 'messageReactionAdd', (message, user)  => 
           @.message_reaction('reaction_added', message, user)
@@ -96,6 +97,11 @@ class DiscordBot extends Adapter
         @client.user.setPresence({ status: 'online', game: { name: currentlyPlaying }})
           .then(@robot.logger.debug("Status set to #{currentlyPlaying}"))
           .catch(@robot.logger.error)
+
+     enter: (member) =>
+        user                      = member
+        @robot.logger.debug "#{user} Joined"
+        @receive new EnterMessage( user )
 
      message: (message) =>
         # ignore messages from myself
