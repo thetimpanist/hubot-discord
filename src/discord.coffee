@@ -93,7 +93,7 @@ class DiscordBot extends Adapter
 
         #post-connect actions
         @rooms[channel.id] = channel for channel in @client.channels
-        @client.user.setPresence({ status: 'online', game: { name: currentlyPlaying }})
+        @client.user.setActivity(currentlyPlaying)
           .then(@robot.logger.debug("Status set to #{currentlyPlaying}"))
           .catch(@robot.logger.error)
 
