@@ -56,6 +56,8 @@ class DiscordBot extends Adapter
         @client.on 'ready', @.ready
         @client.on 'message', @.message
         @client.on 'disconnected', @.disconnected
+        @client.on 'error', (error) =>
+          @robot.logger.error "The client encountered an error: #{error}"
         @client.on 'messageReactionAdd', (message, user)  => 
           @.message_reaction('reaction_added', message, user)
         @client.on 'messageReactionRemove', (message, user) => 
