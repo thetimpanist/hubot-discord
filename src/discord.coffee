@@ -60,6 +60,8 @@ class DiscordBot extends Adapter
         @robot.client = @client
         @client.on 'ready', @.ready
         @client.on 'message', @.message
+        @client.on 'guildMemberAdd', @.enter
+        @client.on 'guildMemberRemove', @.leave
         @client.on 'disconnected', @.disconnected
         @client.on 'error', (error) =>
           @robot.logger.error "The client encountered an error: #{error}"
@@ -123,6 +125,16 @@ class DiscordBot extends Adapter
         @client.user.setActivity(currentlyPlaying)
           .then(@robot.logger.debug("Status set to #{currentlyPlaying}"))
           .catch(@robot.logger.error)
+
+     enter: (member) =>
+        user                      = member
+        @robot.logger.debug "#{user} Joined"
+        @receive new EnterMessage( user )
+
+     leave: (member) =>
+        user                      = member
+        @robot.logger.debug "#{user} Left"
+        @receive new LeaveMessage( user )
 
      message: (message) =>
         # ignore messages from myself
