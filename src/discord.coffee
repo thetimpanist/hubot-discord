@@ -86,7 +86,7 @@ class DiscordBot extends Adapter
         text = message.content ? message.cleanContent
 
         # If content starts by mentioning me `<@!1234567890>`, rewrite to `@myname` so Hubot understands it
-        matches = text.match(new RegExp("^<@!#{@client.user.id}>"))
+        matches = text.match new RegExp( "^<@!#{@client.user.id}>" )
         if matches
           text = "#{@robot.name} #{text.substr(matches[0].length)}"
         
